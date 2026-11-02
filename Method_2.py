@@ -17,23 +17,28 @@ faces = [
 ]
 
 # Проверка принадлежности точки
-def check(P):
-    signs = []
+def check(P, eps=1e-9):
+    boundary_count = 0
 
     for X, Y, Z, Q in faces:
         n = np.cross(Y - X, Z - X)
         s = np.dot(n, P - X)
         t = np.dot(n, Q - X)
-        signs.append((s, s * t))
+        if s * t < -eps:
+            return "Снаружи тетраэдра"
+        if abs(s) < eps:
+            boundary_count += 1
 
-    if any(p < -1e-9 for s, p in signs):
-        return "Снаружи"
-    elif any(abs(s) < 1e-9 for s, p in signs):
-        return "На границе"
+    if boundary_count == 0:
+        return "Внутри тетраэдра"
+    elif boundary_count == 1:
+        return "На грани тетраэдра"
+    elif boundary_count == 2:
+        return "На ребре тетраэдра"
     else:
-        return "Внутри"
+        return "В вершине тетраэдра"
 
-# Тестовые точки из задания
+# Тестовые точки
 points = {
     "P1": [0.5, 0.5, 0.5],
     "P2": [0.5, 0.5, 0],
@@ -55,10 +60,7 @@ faces_plot = [
     [A, C, D], [B, C, D]
 ]
 
-ax.add_collection3d(
-    Poly3DCollection(faces_plot, alpha=0.2,
-                     edgecolor="black")
-)
+ax.add_collection3d(Poly3DCollection(faces_plot, alpha=0.2,edgecolor="black"))
 
 # Отображение точек
 for name, p in points.items():
@@ -66,9 +68,11 @@ for name, p in points.items():
     result = check(p)
 
     color = {
-        "Внутри": "green",
-        "Снаружи": "red",
-        "На границе": "blue"
+        "Внутри тетраэдра": "green",
+        "Снаружи тетраэдра": "red",
+        "На грани тетраэдра": "blue",
+        "На ребре тетраэдра": "orange",
+        "В вершине тетраэдра": "purple"
     }[result]
 
     ax.scatter(*p, color=color, s=50)
@@ -79,4 +83,9 @@ ax.set_ylabel("Y")
 ax.set_zlabel("Z")
 ax.set_title("Тетраэдр и тестовые точки")
 
+
+ax.set_xlim(-0.5, 3.5)
+ax.set_ylim(-0.5, 3.5)
+ax.set_zlim(-0.5, 3.5)
+ax.set_box_aspect([1, 1, 1])
 plt.show()
